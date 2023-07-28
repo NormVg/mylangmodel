@@ -45,7 +45,7 @@ def complete(prompt: str) -> str:
         return result
 
 
-def do(prompt: str) -> str:
+def do(prompt: str, stream=False) -> str:
     """Follow a single-turn instructional prompt
 
     :param prompt: Instructional prompt to follow
@@ -62,7 +62,11 @@ def do(prompt: str) -> str:
     >>> do("Is the following positive or negative: I love Star Trek.")
     'Positive.'
     """
-    result = generate_instruct(prompt, max_tokens=200, topk=1)
+
+    if stream:
+        return generate_instruct(prompt, max_tokens=200, topk=1, stream=True)
+
+    result = generate_instruct(prompt, max_tokens=200, topk=1, stream=False)
 
     if len(result.split()) == 1:
         result = result.title()

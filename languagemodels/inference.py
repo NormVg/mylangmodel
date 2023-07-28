@@ -110,6 +110,17 @@ def chat_oa(engine, prompt, max_tokens=200, temperature=0):
         raise InferenceException(f"OpenAI error: {resp}")
 
 
+def stream_results(results, tokenizer):
+    tokens = []
+    last_len = 0
+
+    for result in results:
+        tokens.append(result.token_id)
+        text = tokenizer.decode(tokens)
+        yield text[last_len:]
+        last_len = len(text)
+
+
 def generate_instruct(
     instruction,
     max_tokens=200,
@@ -118,6 +129,7 @@ def generate_instruct(
     repetition_penalty=1.3,
     prefix="",
     suppress=[],
+    stream=False,
 ):
     """Generates one completion for a prompt using an instruction-tuned model
 
@@ -143,19 +155,21 @@ def generate_instruct(
     prompt = fmt.replace("{instruction}", instruction)
 
     if hasattr(model, "translate_batch"):
-        results = model.translate_batch(
-            [tokenizer.encode(prompt).tokens],
-            target_prefix=[tokenizer.encode(prefix, add_special_tokens=False).tokens],
+        results = model.generate_tokens(
+            tokenizer.encode(prompt).tokens,
+            target_prefix=tokenizer.encode(prefix, add_special_tokens=False).tokens,
             repetition_penalty=repetition_penalty,
             max_decoding_length=max_tokens,
             sampling_temperature=temperature,
             sampling_topk=topk,
             suppress_sequences=suppress,
-            beam_size=1,
         )
-        output_tokens = results[0].hypotheses[0]
-        output_ids = [tokenizer.token_to_id(t) for t in output_tokens]
-        text = tokenizer.decode(output_ids, skip_special_tokens=True)
+
+        if stream:
+            return stream_results(results, tokenizer)
+        else:
+            tokens = [t.token_id for t in results]
+            return tokenizer.decode(tokens)
     else:
         results = model.generate_batch(
             [tokenizer.encode(prompt).tokens],
@@ -169,8 +183,6 @@ def generate_instruct(
         output_ids = results[0].sequences_ids[0]
         text = tokenizer.decode(output_ids, skip_special_tokens=True)
         text = text[len(prompt) :]
-
-    return text
 
 
 def generate_code(
