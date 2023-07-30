@@ -15,6 +15,16 @@ class ModelFilterException(Exception):
 # will be selected
 models = [
     {
+        "name": "Llama-2-7B-Chat",
+        "tuning": "instruct",
+        "datasets": [],
+        "params": 7e9,
+        "quantization": "q3_k_m",
+        "backend": "ggml",
+        "architecture": "decoder-only-transformer",
+        "license": "llama-2",
+    },
+    {
         "name": "flan-alpaca-xl",
         "tuning": "instruct",
         "datasets": ["c4", "flan", "alpaca"],
