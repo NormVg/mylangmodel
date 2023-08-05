@@ -22,6 +22,7 @@ setuptools.setup(
     install_requires=[
         "huggingface_hub",
         "ctranslate2>=3.15.0",
+        "ctransformers>=0.2.19",
         "tokenizers",
        ],
 )
